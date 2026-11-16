@@ -36,6 +36,11 @@ export function formatRating(value: number | null | undefined): string {
   return value.toFixed(2);
 }
 
+export function formatShare(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "—";
+  return `${(value * 100).toFixed(1)}%`;
+}
+
 export function formatPercent(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) return "—";
   const sign = value > 0 ? "+" : "";

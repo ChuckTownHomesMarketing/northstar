@@ -5,27 +5,20 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Notice } from "@/components/forms";
 import { StarMark } from "@/components/ui";
-
-const NAV = [
-  { href: "/", label: "Home" },
-  { href: "/kpis", label: "KPIs" },
-  { href: "/spend", label: "Spend" },
-  { href: "/calendar", label: "Calendar" },
-  { href: "/reports", label: "Weekly report" },
-  { href: "/tasks", label: "Tasks" },
-  { href: "/settings", label: "Settings" },
-];
+import type { NavSection } from "@/server/access";
 
 export function Shell({
   user,
   demo,
   embed,
+  sections,
   signOutAction,
   children,
 }: {
   user: { name: string; email: string; role: "ADMIN" | "VA" };
   demo: boolean;
   embed: boolean;
+  sections: NavSection[];
   signOutAction: () => Promise<void>;
   children: React.ReactNode;
 }) {
@@ -45,20 +38,35 @@ export function Shell({
           </span>
         </Link>
         <nav className="nav" aria-label="Main">
-          {NAV.map((item) => {
-            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-            return (
-              <Link
-              key={item.href}
-              href={item.href}
-              className={active ? "active" : undefined}
-              aria-current={active ? "page" : undefined}
-              onClick={() => setOpen(false)}
-            >
-                {item.label}
-              </Link>
-            );
-          })}
+          {sections.map((section) => (
+            <div key={section.label}>
+              <p className="nav-label">{section.label}</p>
+              {section.items.map((item) => {
+                const hrefs = sections.flatMap((group) => group.items.map((entry) => entry.href));
+                const active = item.href === "/"
+                  ? pathname === "/"
+                  : pathname === item.href ||
+                    (pathname.startsWith(`${item.href}/`) &&
+                      !hrefs.some(
+                        (href) =>
+                          href !== item.href &&
+                          href.startsWith(`${item.href}/`) &&
+                          (pathname === href || pathname.startsWith(`${href}/`)),
+                      ));
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={active ? "active" : undefined}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
         <div className="sidebar-foot">
           <div className="who">

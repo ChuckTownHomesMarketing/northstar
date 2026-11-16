@@ -5,6 +5,7 @@ import { dueOnForTemplate, isoToUtcDate, periodKeyFor, type RecurrenceName } fro
 import { clip, oneOf, optionalDate, read } from "@/lib/forms";
 import { TASK_PRIORITIES, TASK_STATUSES } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
+import { canMutateOwned } from "@/lib/permissions";
 import { requireUser } from "@/server/session";
 import { fail, saved, type ActionState } from "@/server/state";
 
@@ -59,7 +60,6 @@ export async function ensureRecurringTasks(today: string) {
 }
 
 export async function saveTask(_state: ActionState, formData: FormData): Promise<ActionState> {
-  await requireUser();
   const title = clip(read(formData, "title"), 180, "Task");
   if (!title) return fail("Name the task.");
   const priority = oneOf(read(formData, "priority"), PRIORITIES) ?? "MEDIUM";
@@ -70,8 +70,15 @@ export async function saveTask(_state: ActionState, formData: FormData): Promise
   } catch (error) {
     return fail(error instanceof Error ? error.message : "Check the due date.");
   }
+  const user = await requireUser();
   const marketId = read(formData, "marketId") || null;
-  const ownerId = read(formData, "ownerId") || null;
+  const requestedOwner = read(formData, "ownerId") || null;
+  const ownerId = user.role === "VA" ? user.id : requestedOwner;
+  const existingId = read(formData, "id");
+  if (existingId) {
+    const existing = await prisma.task.findUnique({ where: { id: existingId } });
+    if (!existing || !canMutateOwned(user, existing.ownerId)) return fail("That task is not yours.");
+  }
   const data = {
     title,
     details: clip(read(formData, "details"), 4000, "Details") || null,
@@ -82,18 +89,19 @@ export async function saveTask(_state: ActionState, formData: FormData): Promise
     status,
     isDemo: false,
   };
-  const id = read(formData, "id");
-  if (id) await prisma.task.update({ where: { id }, data });
+  if (existingId) await prisma.task.update({ where: { id: existingId }, data });
   else await prisma.task.create({ data });
   revalidatePath("/tasks");
   revalidatePath("/");
-  saved(tasksPath(formData), id ? "Task updated." : "Task added.");
+  saved(tasksPath(formData), existingId ? "Task updated." : "Task added.");
 }
 
 export async function moveTask(id: string, status: string) {
-  await requireUser();
+  const user = await requireUser();
   const next = oneOf(status, STATUSES);
   if (!id || !next) return;
+  const existing = await prisma.task.findUnique({ where: { id } });
+  if (!existing || !canMutateOwned(user, existing.ownerId)) return;
   await prisma.task.update({ where: { id }, data: { status: next } }).catch(() => null);
   revalidatePath("/tasks");
   revalidatePath("/");
@@ -104,15 +112,18 @@ export async function updateTaskStatus(formData: FormData) {
 }
 
 export async function deleteTask(formData: FormData) {
-  await requireUser();
-  await prisma.task.delete({ where: { id: read(formData, "id") } }).catch(() => null);
+  const user = await requireUser();
+  const existing = await prisma.task.findUnique({ where: { id: read(formData, "id") } });
+  if (!existing || !canMutateOwned(user, existing.ownerId)) return;
+  await prisma.task.delete({ where: { id: existing.id } }).catch(() => null);
   revalidatePath("/tasks");
   revalidatePath("/");
   saved(tasksPath(formData), "Task removed.");
 }
 
 export async function saveTemplate(_state: ActionState, formData: FormData): Promise<ActionState> {
-  await requireUser();
+  const user = await requireUser();
+  if (user.role !== "ADMIN") return fail("Avery manages recurring templates.");
   const title = clip(read(formData, "title"), 180, "Template");
   if (!title) return fail("Name the recurring task.");
   const recurrence = oneOf(read(formData, "recurrence"), RECURRENCES);
@@ -143,7 +154,8 @@ export async function saveTemplate(_state: ActionState, formData: FormData): Pro
 }
 
 export async function toggleTemplate(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
+  if (user.role !== "ADMIN") return;
   const id = read(formData, "id");
   const template = await prisma.taskTemplate.findUnique({ where: { id } });
   if (!template) return;

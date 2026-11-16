@@ -44,7 +44,10 @@ export async function addPerson(_state: ActionState, formData: FormData): Promis
   }
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) return fail("That email is already on the list. You can change the role below.");
-  await prisma.user.create({ data: { email, name, role, active: true } });
+  const created = await prisma.user.create({ data: { email, name, role, active: true } });
+  if (role === "VA" || role === "ADMIN") {
+    await prisma.userModuleGrant.create({ data: { userId: created.id, moduleKey: "marketing" } }).catch(() => null);
+  }
   revalidatePath("/settings");
   saved("/settings#people", `${name} can sign in with Google.`);
 }

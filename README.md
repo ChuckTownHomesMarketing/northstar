@@ -137,6 +137,73 @@ Northstar does not change [ChuckTown Connect](https://connect.chucktownhomes.com
 
 The marketing bot team (Social Media Manager, Content & SEO Writer, Ads & Analytics, Market Researcher, Reviews & Reputation, and Byte) is a set of editable records on the home page. They describe who to ask. They are not live model calls yet.
 
+## Version 2
+
+My Day is the home page. Marketing and Product ordering are modules an admin can turn off. Apps and API tokens live beside them.
+
+### Lead reporting
+
+`/leads` shows volume, cost, cost per lead, appointment rate, and conversion rate by source, market, and date range. Appointment rate is appointments divided by leads. Conversion rate is conversions divided by leads. Both stay blank when the lead count is zero.
+
+Starting sources are Google PPC, Meta, and AI leads. AI leads means chat or assistant inquiries, AI search referrals, and AI-driven campaigns. Admins can add more sources. Rows come from the form, a CSV, or `POST /api/webhooks/leads`. Google Ads and Meta Lead Ads adapters are reserved in `src/lib/leads.ts` and refuse to run until a real connection exists.
+
+Webhook body:
+
+```json
+{
+  "source": "google-ppc",
+  "market": "charleston",
+  "occurredOn": "2026-11-16",
+  "leads": 1,
+  "spendCents": 1500,
+  "appointments": 0,
+  "conversions": 0,
+  "externalId": "zapier-123"
+}
+```
+
+Send `Authorization: Bearer <token>` with the `leads:write` scope. The same `source` and `externalId` returns the original row instead of a duplicate. `spend` may be dollars (`"12.50"`) or `spendCents`.
+
+### Modules and product ordering
+
+Settings → Modules turns Marketing or Product ordering off for the whole company. Admins can open every module that is on. A VA needs a grant. New people receive Marketing. Ordering is granted to admins and stays off for a new VA until Avery checks it.
+
+`/ordering` is the catalog and request form. Statuses are Requested, Approved, Ordered, and Delivered. `/ordering/queue` is the admin queue. VAs only see their own orders.
+
+### Apps
+
+`/apps` lists tools Avery registers: name, icon, URL, embed or new tab, and whether admins, every VA, or named people can see it. Embeds open at `/apps/<id>` in an iframe. A site that blocks frames can still be opened in a new tab.
+
+### MCP and API tokens
+
+`POST /api/mcp` speaks MCP JSON-RPC (`initialize`, `tools/list`, `tools/call`) at protocol `2024-11-05`. `GET /api/mcp` lists the tools. Authorize with `Authorization: Bearer ns_...`.
+
+Issue tokens in Settings → API tokens. A token tied to a person acts as that person, so a VA token cannot read someone else's tasks, content, or orders. A service token with no person has admin visibility, limited to the scopes you check. The full token is shown once.
+
+Scopes: `mcp`, `leads:read`, `leads:write`, `tasks:read`, `tasks:write`, `kpis:read`, `content:read`, `content:write`, `orders:write`.
+
+Tools:
+
+| Tool | Scopes | What it does |
+| --- | --- | --- |
+| `list_tasks` | `mcp`, `tasks:read` | Tasks the token is allowed to see |
+| `create_task` | `mcp`, `tasks:write` | Creates a task owned by the token's person |
+| `read_lead_metrics` | `mcp`, `leads:read` | Lead totals for a date range |
+| `read_kpi_metrics` | `mcp`, `kpis:read` | Monthly KPI rows (`year`, `month`) |
+| `list_content` | `mcp`, `content:read` | Calendar items the token can see |
+| `create_content` | `mcp`, `content:write` | Adds an Idea owned by the token's person |
+| `create_product_order` | `mcp`, `orders:write` | Requests a catalog product (`productId`, `quantity`) |
+
+### My Day and permissions
+
+Each Google account lands on My Day: their audit, their tasks, their content, and their orders. Admins also see who finished today's audit and how many tasks are still open. Audit templates can apply to every VA, every admin, or stay unassigned until you name people.
+
+Decisions Avery can change:
+
+- Company numbers (KPIs, spend, leads, the weekly report) are visible to anyone who has the Marketing module. Tasks, content items, orders, and audit checks are personal. A VA does not see another person's rows.
+- A VA can only assign a task or a content item to themselves. Admins assign work to anyone. Campaigns and recurring templates are admin-only.
+- A service token is org-wide for its scopes. A user token is not.
+
 ## Modules
 
 1. **Home** — this week’s KPIs, tasks due, content on the calendar, quick links, and the bot team.

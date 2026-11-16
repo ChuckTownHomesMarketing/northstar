@@ -310,6 +310,88 @@ export async function loadDemoData(db: PrismaClient): Promise<{ written: number;
     written += 1;
   }
 
+  const sources = await db.leadSourceDefinition.findMany();
+  const google = sources.find((source) => source.slug === "google-ppc");
+  const meta = sources.find((source) => source.slug === "meta");
+  const ai = sources.find((source) => source.slug === "ai-leads");
+  const sampleLeads = [
+    { id: "sample-lead-google", sourceId: google?.id, marketId: charleston?.id, leads: 4, spendCents: 80000, appointments: 1, conversions: 0 },
+    { id: "sample-lead-meta", sourceId: meta?.id, marketId: charleston?.id, leads: 6, spendCents: 60000, appointments: 2, conversions: 1 },
+    { id: "sample-lead-ai", sourceId: ai?.id, marketId: chattanooga?.id, leads: 2, spendCents: 0, appointments: 1, conversions: 0 },
+  ];
+  for (const lead of sampleLeads) {
+    if (!lead.sourceId) continue;
+    await db.leadRecord.upsert({
+      where: { id: lead.id },
+      update: { isDemo: true, notes: SAMPLE_NOTE, origin: "DEMO" },
+      create: {
+        id: lead.id,
+        sourceId: lead.sourceId,
+        marketId: lead.marketId,
+        occurredOn: isoToUtcDate("2026-11-16"),
+        leads: lead.leads,
+        spendCents: lead.spendCents,
+        appointments: lead.appointments,
+        conversions: lead.conversions,
+        notes: SAMPLE_NOTE,
+        origin: "DEMO",
+        isDemo: true,
+      },
+    });
+    written += 1;
+  }
+
+  const sign = await db.catalogProduct.upsert({
+    where: { id: "sample-product-sign" },
+    update: { active: true, isDemo: true },
+    create: {
+      id: "sample-product-sign",
+      name: "SAMPLE: Yard sign",
+      category: "Signs",
+      description: SAMPLE_NOTE,
+      unitPriceCents: 2500,
+      isDemo: true,
+    },
+  });
+  await db.catalogProduct.upsert({
+    where: { id: "sample-product-cards" },
+    update: { active: true, isDemo: true },
+    create: {
+      id: "sample-product-cards",
+      name: "SAMPLE: Business cards",
+      category: "Print",
+      description: SAMPLE_NOTE,
+      unitPriceCents: 4500,
+      isDemo: true,
+    },
+  });
+  await db.productOrder.upsert({
+    where: { id: "sample-order-sign" },
+    update: { isDemo: true },
+    create: {
+      id: "sample-order-sign",
+      productId: sign.id,
+      quantity: 2,
+      requesterId: sampleVa.id,
+      marketId: charleston?.id,
+      status: "REQUESTED",
+      notes: SAMPLE_NOTE,
+      isDemo: true,
+    },
+  });
+  written += 3;
+
+  await db.userModuleGrant.upsert({
+    where: { userId_moduleKey: { userId: sampleVa.id, moduleKey: "marketing" } },
+    update: {},
+    create: { userId: sampleVa.id, moduleKey: "marketing" },
+  });
+  await db.userModuleGrant.upsert({
+    where: { userId_moduleKey: { userId: sampleVa.id, moduleKey: "ordering" } },
+    update: {},
+    create: { userId: sampleVa.id, moduleKey: "ordering" },
+  });
+
   return { written, skipped };
 }
 
@@ -322,17 +404,22 @@ export async function wipeDemoData(db: PrismaClient): Promise<void> {
     db.taskTemplate.deleteMany({ where: { isDemo: true } }),
     db.campaign.deleteMany({ where: { isDemo: true } }),
     db.weeklyReport.deleteMany({ where: { isDemo: true } }),
+    db.leadRecord.deleteMany({ where: { isDemo: true } }),
+    db.productOrder.deleteMany({ where: { isDemo: true } }),
+    db.catalogProduct.deleteMany({ where: { isDemo: true } }),
     db.user.deleteMany({ where: { isDemo: true } }),
   ]);
 }
 
 export async function demoDataPresent(db: PrismaClient): Promise<boolean> {
-  const [kpis, spend, content, tasks, reports] = await Promise.all([
+  const [kpis, spend, content, tasks, reports, leads, orders] = await Promise.all([
     db.marketMonthKpi.count({ where: { isDemo: true } }),
     db.spendEntry.count({ where: { isDemo: true } }),
     db.contentItem.count({ where: { isDemo: true } }),
     db.task.count({ where: { isDemo: true } }),
     db.weeklyReport.count({ where: { isDemo: true } }),
+    db.leadRecord.count({ where: { isDemo: true } }),
+    db.productOrder.count({ where: { isDemo: true } }),
   ]);
-  return kpis + spend + content + tasks + reports > 0;
+  return kpis + spend + content + tasks + reports + leads + orders > 0;
 }

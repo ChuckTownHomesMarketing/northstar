@@ -1,0 +1,294 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  VA
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum Recurrence {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ContentStatus {
+  IDEA
+  DRAFTING
+  REVIEW
+  SCHEDULED
+  POSTED
+}
+
+enum ContentChannel {
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+  YOUTUBE
+  LINKEDIN
+  EMAIL
+  BLOG
+  GOOGLE_BUSINESS
+  OTHER
+}
+
+enum ContentType {
+  POST
+  REEL
+  STORY
+  BLOG_POST
+  EMAIL_BLAST
+  AD_CREATIVE
+  VIDEO
+  LISTING
+  OTHER
+}
+
+enum LeadSource {
+  META
+  GOOGLE_ADS
+  ZILLOW
+  REALTOR
+  REFERRAL
+  ORGANIC
+  OTHER
+}
+
+enum MetricOrigin {
+  MANUAL
+  CSV
+  DEMO
+  INTEGRATION
+}
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  name        String
+  image       String?
+  role        Role      @default(VA)
+  active      Boolean   @default(true)
+  isDemo      Boolean   @default(false)
+  googleSub   String?   @unique
+  lastLoginAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  contentItems ContentItem[]  @relation("ContentOwner")
+  tasks        Task[]         @relation("TaskOwner")
+  templates    TaskTemplate[] @relation("TemplateOwner")
+  reports      WeeklyReport[]
+}
+
+model Market {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  city        String
+  state       String
+  address     String?
+  phone       String?
+  active      Boolean  @default(true)
+  openingNote String?
+  sortOrder   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  kpis      MarketMonthKpi[]
+  spend     SpendEntry[]
+  content   ContentItem[]
+  campaigns Campaign[]
+  tasks     Task[]
+  templates TaskTemplate[]
+}
+
+model AiTeammate {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  title     String
+  askFor    String   @db.Text
+  sortOrder Int
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model QuickLink {
+  id          String   @id @default(cuid())
+  label       String
+  href        String
+  description String?
+  sortOrder   Int
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model MarketMonthKpi {
+  id               String       @id @default(cuid())
+  marketId         String
+  market           Market       @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  year             Int
+  month            Int
+  leads            Int?
+  adSpendCents     Int?
+  costPerLeadCents Int?
+  appointments     Int?
+  closings         Int?
+  websiteSessions  Int?
+  socialFollowers  Int?
+  socialEngagement Int?
+  newGoogleReviews Int?
+  avgRating        Decimal?     @db.Decimal(3, 2)
+  notes            String?
+  origin           MetricOrigin @default(MANUAL)
+  isDemo           Boolean      @default(false)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  @@unique([marketId, year, month])
+  @@index([year, month])
+}
+
+model SpendEntry {
+  id           String       @id @default(cuid())
+  marketId     String
+  market       Market       @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  source       LeadSource
+  sourceDetail String       @default("")
+  weekStart    DateTime     @db.Date
+  spendCents   Int
+  leads        Int
+  appointments Int
+  notes        String?
+  origin       MetricOrigin @default(MANUAL)
+  isDemo       Boolean      @default(false)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@unique([marketId, source, sourceDetail, weekStart])
+  @@index([weekStart])
+}
+
+model Campaign {
+  id          String        @id @default(cuid())
+  name        String
+  marketId    String?
+  market      Market?       @relation(fields: [marketId], references: [id], onDelete: SetNull)
+  description String?
+  startsOn    DateTime?     @db.Date
+  endsOn      DateTime?     @db.Date
+  isDemo      Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  items       ContentItem[]
+}
+
+model ContentItem {
+  id           String         @id @default(cuid())
+  marketId     String?
+  market       Market?        @relation(fields: [marketId], references: [id], onDelete: SetNull)
+  campaignId   String?
+  campaign     Campaign?      @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  channel      ContentChannel
+  contentType  ContentType
+  topic        String
+  ownerId      String?
+  owner        User?          @relation("ContentOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  status       ContentStatus  @default(IDEA)
+  scheduledFor DateTime?      @db.Date
+  link         String?
+  notes        String?
+  isDemo       Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([scheduledFor])
+  @@index([status])
+}
+
+model WeeklyReport {
+  id          String   @id @default(cuid())
+  weekStart   DateTime @db.Date @unique
+  wins        String   @default("") @db.Text
+  issues      String   @default("") @db.Text
+  priorities  String   @default("") @db.Text
+  isDemo      Boolean  @default(false)
+  updatedById String?
+  updatedBy   User?    @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Task {
+  id         String        @id @default(cuid())
+  title      String
+  details    String?
+  marketId   String?
+  market     Market?       @relation(fields: [marketId], references: [id], onDelete: SetNull)
+  ownerId    String?
+  owner      User?         @relation("TaskOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  dueOn      DateTime?     @db.Date
+  priority   TaskPriority  @default(MEDIUM)
+  status     TaskStatus    @default(TODO)
+  templateId String?
+  template   TaskTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  periodKey  String?
+  isDemo     Boolean       @default(false)
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([templateId, periodKey])
+  @@index([status])
+  @@index([dueOn])
+}
+
+model TaskTemplate {
+  id         String       @id @default(cuid())
+  title      String
+  details    String?
+  marketId   String?
+  market     Market?      @relation(fields: [marketId], references: [id], onDelete: SetNull)
+  ownerId    String?
+  owner      User?        @relation("TemplateOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  priority   TaskPriority @default(MEDIUM)
+  recurrence Recurrence
+  weekday    Int?
+  dayOfMonth Int?
+  active     Boolean      @default(true)
+  isDemo     Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  tasks      Task[]
+}
+
+/// Reserved rows for later Meta, Google Ads, GA4, and CRM connections.
+/// v1 never marks these connected and never invents metrics from them.
+model IntegrationPlaceholder {
+  id        String   @id @default(cuid())
+  provider  String   @unique
+  status    String   @default("not_connected")
+  notes     String?
+  updatedAt DateTime @updatedAt
+}

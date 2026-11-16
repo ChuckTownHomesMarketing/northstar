@@ -1,0 +1,65 @@
+{
+  "name": "Northstar",
+  "description": "Marketing operations for ChuckTown Homes",
+  "repository": "https://github.com/ChuckTownHomesMarketing/northstar",
+  "stack": "heroku-24",
+  "keywords": ["nextjs", "prisma", "marketing", "chucktown-homes"],
+  "success_url": "/",
+  "addons": ["heroku-postgresql:essential-0"],
+  "env": {
+    "AUTH_SECRET": {
+      "description": "Signs the login session. Generated for you.",
+      "generator": "secret"
+    },
+    "AUTH_GOOGLE_ID": {
+      "description": "Google OAuth client ID",
+      "required": true
+    },
+    "AUTH_GOOGLE_SECRET": {
+      "description": "Google OAuth client secret",
+      "required": true
+    },
+    "AUTH_URL": {
+      "description": "Public URL of this app, for example https://northstar-yourapp.herokuapp.com",
+      "required": true
+    },
+    "AUTH_TRUST_HOST": {
+      "description": "Required behind Heroku's proxy",
+      "value": "true"
+    },
+    "ALLOWED_EMAIL_DOMAIN": {
+      "description": "Only this Google Workspace domain can sign in",
+      "value": "chucktownhomes.com"
+    },
+    "BOOTSTRAP_ADMIN_EMAIL": {
+      "description": "Avery French's real @chucktownhomes.com Google account. Seeded as Admin on first deploy.",
+      "required": true
+    },
+    "BOOTSTRAP_ADMIN_NAME": {
+      "description": "Name stored for the first admin",
+      "value": "Avery French"
+    },
+    "SEED_DEMO_DATA": {
+      "description": "Load clearly flagged sample numbers. Leave false in production.",
+      "value": "false"
+    },
+    "ENABLE_DEV_LOGIN": {
+      "description": "Local-only passwordless sign-in. Must stay false on Heroku.",
+      "value": "false"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "scripts": {
+    "postdeploy": "prisma migrate deploy && prisma db seed"
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}

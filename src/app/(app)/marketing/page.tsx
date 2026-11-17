@@ -128,8 +128,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           <section className="card">
             <div className="profile-top">
               <span className="avatar-btn" aria-hidden="true">
-                {firstName(user.name).slice(0, 1)}
-                {user.name.split(" ")[1]?.[0] ?? ""}
+                {`${firstName(user.name).slice(0, 1)}${user.name.split(" ")[1]?.[0] ?? ""}`}
               </span>
               <div>
                 <strong>{user.name}</strong>

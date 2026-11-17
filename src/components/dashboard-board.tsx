@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Area, AreaChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { tooltipStyle } from "@/components/chart-theme";
 
 export type DashPoint = {
@@ -124,28 +124,57 @@ export function DonutCard({ slices }: { slices: { name: string; value: number; c
       {slices.length === 0 ? (
         <p className="muted">No lead split yet.</p>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "140px 1fr", gap: 8, alignItems: "center" }}>
-          <div style={{ width: 140, height: 140 }}>
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie data={slices} dataKey="value" nameKey="name" innerRadius={42} outerRadius={62} stroke="none">
-                  {slices.map((slice) => (
-                    <Cell key={slice.name} fill={slice.color} />
-                  ))}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
+        <div className="donut-block">
+          <div className="donut-chart">
+            <DonutRing slices={slices} />
           </div>
-          <ul className="stack" style={{ listStyle: "none", margin: 0, padding: 0 }}>
+          <ul className="donut-legend">
             {slices.map((slice) => (
-              <li key={slice.name} className="muted">
-                <span style={{ color: slice.color }}>●</span> {slice.name} · {slice.value}
+              <li key={slice.name}>
+                <span className="donut-dot" style={{ background: slice.color }} />
+                <span className="donut-name">{slice.name}</span>
+                <span className="donut-value">{slice.value}</span>
               </li>
             ))}
           </ul>
         </div>
       )}
     </section>
+  );
+}
+
+function DonutRing({ slices }: { slices: { name: string; value: number; color: string }[] }) {
+  const total = slices.reduce((sum, slice) => sum + slice.value, 0);
+  const radius = 68;
+  const circumference = 2 * Math.PI * radius;
+  let cursor = 0;
+  return (
+    <svg width="200" height="200" viewBox="0 0 200 200" role="img" aria-label="Lead split">
+      <circle cx="100" cy="100" r={radius} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="26" />
+      {total > 0
+        ? slices.map((slice) => {
+            const length = (slice.value / total) * circumference;
+            const gap = slices.length > 1 ? 2 : 0;
+            const segment = (
+              <circle
+                key={slice.name}
+                cx="100"
+                cy="100"
+                r={radius}
+                fill="none"
+                stroke={slice.color}
+                strokeWidth="26"
+                strokeLinecap="butt"
+                strokeDasharray={`${Math.max(length - gap, 0)} ${circumference}`}
+                strokeDashoffset={-cursor}
+                transform="rotate(-90 100 100)"
+              />
+            );
+            cursor += length;
+            return segment;
+          })
+        : null}
+    </svg>
   );
 }
 

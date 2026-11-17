@@ -5,6 +5,7 @@ import { CONTENT_CHANNELS, CONTENT_STATUSES, CONTENT_TYPES } from "@/lib/labels"
 import { clip, oneOf, optionalDate, read } from "@/lib/forms";
 import { safeHref } from "@/lib/links";
 import { prisma } from "@/lib/prisma";
+import { canMutateOwned } from "@/lib/permissions";
 import { requireUser } from "@/server/session";
 import { fail, saved, type ActionState } from "@/server/state";
 
@@ -27,7 +28,7 @@ function calendarPath(formData: FormData): string {
 }
 
 export async function saveContent(_state: ActionState, formData: FormData): Promise<ActionState> {
-  await requireUser();
+  const user = await requireUser();
   const topic = clip(read(formData, "topic"), 180, "Topic");
   if (!topic) return fail("Add a topic so the team knows what this is.");
   const channel = oneOf(read(formData, "channel"), CHANNELS);
@@ -44,7 +45,7 @@ export async function saveContent(_state: ActionState, formData: FormData): Prom
     return fail(error instanceof Error ? error.message : "Check the date.");
   }
   const marketId = read(formData, "marketId") || null;
-  const ownerId = read(formData, "ownerId") || null;
+  const ownerId = user.role === "VA" ? user.id : read(formData, "ownerId") || null;
   const campaignId = read(formData, "campaignId") || null;
   if (marketId && !(await prisma.market.findUnique({ where: { id: marketId } }))) return fail("Choose a market from the list.");
   if (ownerId && !(await prisma.user.findUnique({ where: { id: ownerId } }))) return fail("Choose an owner from the list.");
@@ -64,6 +65,8 @@ export async function saveContent(_state: ActionState, formData: FormData): Prom
   };
   const id = read(formData, "id");
   if (id) {
+    const existing = await prisma.contentItem.findUnique({ where: { id } });
+    if (!existing || !canMutateOwned(user, existing.ownerId)) return fail("That piece is not yours.");
     await prisma.contentItem.update({ where: { id }, data });
   } else {
     await prisma.contentItem.create({ data });
@@ -75,10 +78,12 @@ export async function saveContent(_state: ActionState, formData: FormData): Prom
 }
 
 export async function updateContentStatus(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const id = read(formData, "id");
   const status = oneOf(read(formData, "status"), STATUSES);
   if (!id || !status) return;
+  const existing = await prisma.contentItem.findUnique({ where: { id } });
+  if (!existing || !canMutateOwned(user, existing.ownerId)) return;
   await prisma.contentItem.update({ where: { id }, data: { status, isDemo: false } }).catch(() => null);
   revalidatePath("/calendar");
   revalidatePath("/");
@@ -86,8 +91,10 @@ export async function updateContentStatus(formData: FormData) {
 }
 
 export async function deleteContent(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
   const id = read(formData, "id");
+  const existing = await prisma.contentItem.findUnique({ where: { id } });
+  if (!existing || !canMutateOwned(user, existing.ownerId)) return;
   await prisma.contentItem.delete({ where: { id } }).catch(() => null);
   revalidatePath("/calendar");
   revalidatePath("/");
@@ -95,7 +102,8 @@ export async function deleteContent(formData: FormData) {
 }
 
 export async function saveCampaign(_state: ActionState, formData: FormData): Promise<ActionState> {
-  await requireUser();
+  const user = await requireUser();
+  if (user.role !== "ADMIN") return fail("Avery manages campaigns.");
   const name = clip(read(formData, "name"), 140, "Campaign name");
   if (!name) return fail("Name the campaign.");
   let startsOn: Date | null;

@@ -5,6 +5,8 @@ import { Field, PageHeader, marketLabel } from "@/components/ui";
 import { dateToIso, formatLongDate, todayIso } from "@/lib/dates";
 import { TASK_PRIORITIES, TASK_STATUSES, WEEKDAYS, labelFor } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
+import { requireModule } from "@/server/access";
+import { visibleOwnerId } from "@/lib/permissions";
 import { deleteTask, ensureRecurringTasks, saveTask, saveTemplate, toggleTemplate, updateTaskStatus } from "@/server/task-actions";
 
 export const metadata = { title: "Tasks" };
@@ -14,7 +16,9 @@ export default async function TasksPage({
 }: {
   searchParams: Promise<{ view?: string; market?: string; owner?: string }>;
 }) {
+  const user = await requireModule("marketing");
   const params = await searchParams;
+  const lockedOwner = visibleOwnerId(user, params.owner);
   const today = todayIso();
   await ensureRecurringTasks(today);
   const view = params.view === "list" ? "list" : "board";
@@ -28,7 +32,7 @@ export default async function TasksPage({
   const tasks = await prisma.task.findMany({
     where: {
       ...(market ? { marketId: market.id } : {}),
-      ...(params.owner ? { ownerId: params.owner } : {}),
+      ...(lockedOwner ? { ownerId: lockedOwner } : {}),
       OR: [{ status: { not: "DONE" } }, { status: "DONE", dueOn: { gte: cutoff } }],
     },
     include: { market: true, owner: true },

@@ -6,6 +6,7 @@ import { LEAD_SOURCES, sourceLabel } from "@/lib/labels";
 import { formatCount, formatMoneyFromCents } from "@/lib/money";
 import { blendedFromSpend, summarizeSpend } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
+import { requireModule } from "@/server/access";
 import { deleteSpend, importSpendCsv, saveSpend } from "@/server/spend-actions";
 
 export const metadata = { title: "Spend" };
@@ -15,6 +16,7 @@ export default async function SpendPage({
 }: {
   searchParams: Promise<{ week?: string; market?: string; range?: string }>;
 }) {
+  await requireModule("marketing");
   const params = await searchParams;
   const week = params.week && parseIsoDate(params.week) ? mondayOf(params.week) : currentWeekStart();
   const range = params.range === "month" ? "month" : "week";

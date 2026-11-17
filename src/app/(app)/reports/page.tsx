@@ -2,11 +2,13 @@ import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 import { addDays, currentWeekStart, formatLongDate, mondayOf } from "@/lib/dates";
 import { prisma } from "@/lib/prisma";
+import { requireModule } from "@/server/access";
 import { isoToUtcDate } from "@/lib/dates";
 
 export const metadata = { title: "Weekly reports" };
 
 export default async function ReportsPage() {
+  await requireModule("marketing");
   const current = currentWeekStart();
   const weeks = [-6, -5, -4, -3, -2, -1, 0, 1].map((offset) => addDays(current, offset * 7));
   const reports = await prisma.weeklyReport.findMany({

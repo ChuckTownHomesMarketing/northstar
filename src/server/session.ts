@@ -28,6 +28,6 @@ export async function requireUser() {
 
 export async function requireAdmin() {
   const user = await requireUser();
-  if (user.role !== "ADMIN") redirect("/settings?notice=Avery manages that setting.");
+  if (user.role !== "ADMIN") redirect("/?notice=Avery manages that setting.");
   return user;
 }

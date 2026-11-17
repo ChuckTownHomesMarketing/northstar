@@ -4,6 +4,8 @@ import { Field, PageHeader, marketLabel } from "@/components/ui";
 import { dateToIso, formatLongDate, formatMonth, formatShortDate, monthGrid, monthInputValue, parseMonthKey, shiftMonth } from "@/lib/dates";
 import { CONTENT_CHANNELS, CONTENT_STATUSES, CONTENT_TYPES, labelFor } from "@/lib/labels";
 import { prisma } from "@/lib/prisma";
+import { requireModule } from "@/server/access";
+import { visibleOwnerId } from "@/lib/permissions";
 import { deleteContent, saveCampaign, saveContent, updateContentStatus } from "@/server/content-actions";
 
 export const metadata = { title: "Calendar" };
@@ -13,7 +15,9 @@ export default async function CalendarPage({
 }: {
   searchParams: Promise<{ month?: string; view?: string; market?: string; owner?: string; status?: string; campaign?: string }>;
 }) {
+  const user = await requireModule("marketing");
   const params = await searchParams;
+  const lockedOwner = visibleOwnerId(user, params.owner);
   const { year, month } = parseMonthKey(params.month);
   const view = params.view === "list" ? "list" : "month";
   const [markets, people, campaigns] = await Promise.all([
@@ -22,7 +26,7 @@ export default async function CalendarPage({
     prisma.campaign.findMany({ include: { market: true }, orderBy: { name: "asc" } }),
   ]);
   const market = markets.find((item) => item.slug === params.market);
-  const owner = people.find((item) => item.id === params.owner);
+  const owner = people.find((item) => item.id === lockedOwner);
   const status = CONTENT_STATUSES.find((item) => item.value === params.status)?.value;
   const campaign = campaigns.find((item) => item.id === params.campaign);
   const items = await prisma.contentItem.findMany({

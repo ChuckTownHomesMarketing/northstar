@@ -5,6 +5,7 @@ import { Field, PageHeader } from "@/components/ui";
 import { formatCount, formatMoneyFromCents, formatRating } from "@/lib/money";
 import { mondayOf, parseIsoDate } from "@/lib/dates";
 import { saveReport } from "@/server/report-actions";
+import { requireModule } from "@/server/access";
 import { loadReport } from "@/server/report-data";
 
 export async function generateMetadata({ params }: { params: Promise<{ week: string }> }) {
@@ -13,6 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ week: str
 }
 
 export default async function ReportWeekPage({ params }: { params: Promise<{ week: string }> }) {
+  await requireModule("marketing");
   const { week: raw } = await params;
   if (!parseIsoDate(raw)) notFound();
   const week = mondayOf(raw);

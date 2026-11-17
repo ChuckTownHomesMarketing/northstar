@@ -6,6 +6,7 @@ import { formatMonth, monthInputValue, parseMonthKey, shiftMonth } from "@/lib/d
 import { centsToDollarInput, formatCount, formatMoneyFromCents, formatRating } from "@/lib/money";
 import { effectiveCpl } from "@/lib/metrics";
 import { prisma } from "@/lib/prisma";
+import { requireModule } from "@/server/access";
 import { saveKpi, importKpiCsv } from "@/server/kpi-actions";
 
 export const metadata = { title: "KPIs" };
@@ -21,6 +22,7 @@ export default async function KpiPage({
 }: {
   searchParams: Promise<{ month?: string; market?: string }>;
 }) {
+  await requireModule("marketing");
   const params = await searchParams;
   const { year, month } = parseMonthKey(params.month);
   const previous = shiftMonth(year, month, -1);

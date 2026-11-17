@@ -2,7 +2,8 @@ import { BoundForm, ConfirmSubmit } from "@/components/forms";
 import { Field, PageHeader, marketLabel } from "@/components/ui";
 import { INTEGRATION_CATALOG } from "@/lib/integrations";
 import { prisma } from "@/lib/prisma";
-import { requireUser } from "@/server/session";
+import { AccessPanel } from "./access-panel";
+import { requireAdmin } from "@/server/session";
 import {
   addPerson,
   deleteLink,
@@ -17,7 +18,7 @@ import {
 export const metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const user = await requireUser();
+  const user = await requireAdmin();
   const admin = user.role === "ADMIN";
   const [markets, people, teammates, links] = await Promise.all([
     prisma.market.findMany({ orderBy: { sortOrder: "asc" } }),
@@ -246,6 +247,7 @@ export default async function SettingsPage() {
           </div>
         </section>
       ) : null}
+      <AccessPanel />
       <section id="integrations" className="section-gap">
         <h2>Future data connections</h2>
         <p className="muted">Nothing here is connected. Northstar will not invent ad, analytics, or CRM numbers.</p>

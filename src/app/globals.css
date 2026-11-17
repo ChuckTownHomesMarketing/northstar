@@ -55,11 +55,14 @@ button { cursor: pointer; }
 }
 .brand strong { display: block; font-family: var(--serif); font-size: 22px; font-weight: 560; letter-spacing: -0.03em; }
 .brand p, .sidebar-foot { margin: 0; color: #c8bfb0; font-size: 12px; }
-.nav { display: flex; flex-direction: column; gap: 4px; }
+.nav { display: flex; flex-direction: column; gap: 4px; overflow: auto; }
+.nav-label { margin: 14px 8px 4px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #9aa6b8; }
+.app-frame { width: 100%; min-height: 72vh; border: 1px solid var(--line); border-radius: 16px; background: white; }
 .nav a {
+  display: block;
   color: var(--sidebar-text);
   text-decoration: none;
-  padding: 10px 12px;
+  padding: 8px 12px;
   border-radius: 10px;
   border-left: 3px solid transparent;
 }

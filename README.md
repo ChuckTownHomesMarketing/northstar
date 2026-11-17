@@ -139,7 +139,7 @@ The marketing bot team (Social Media Manager, Content & SEO Writer, Ads & Analyt
 
 ## Visual design
 
-The app is a matte-black workspace. A faint starfield sits behind the pages and stays still when reduced motion is on. The Northstar wordmark is centered, widely tracked, and tinted with the logo’s lavender and peach. The mark is an SVG shield with an upward arrow and a peach star (`public/northstar-logo.png` is the reference). Navigation is a floating icon rail with tooltips. Marketing health on the Marketing overview scores only dimensions that have real numbers for the current month. Targets are per market for counts and a single number for cost per lead, rating, and percents. Admins edit them under Settings → Marketing health targets.
+The app frame is a deep charcoal panel floating on a darker background. A very faint starfield stays on that outer background only, and it stays still when reduced motion is on. The Northstar wordmark is centered, widely tracked, and tinted with the logo’s lavender and peach. The mark is an SVG shield with an upward arrow and a peach star (`public/northstar-logo.png` is the reference). Navigation is a floating icon rail with tooltips. Marketing health on the Marketing overview scores only dimensions that have real numbers for the current month. Targets are per market for counts and a single number for cost per lead, rating, and percents. Admins edit them under Settings → Marketing health targets.
 
 ## Version 2
 

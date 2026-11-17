@@ -11,12 +11,12 @@ export function Starfield() {
     const context = canvas.getContext("2d");
     if (!context) return;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const stars = Array.from({ length: 140 }, () => ({
+    const stars = Array.from({ length: 70 }, () => ({
       x: Math.random(),
       y: Math.random(),
-      r: Math.random() * 1.2 + 0.2,
-      a: Math.random() * 0.55 + 0.15,
-      s: Math.random() * 0.6 + 0.15,
+      r: Math.random() * 1.1 + 0.2,
+      a: Math.random() * 0.22 + 0.05,
+      s: Math.random() * 0.35 + 0.08,
     }));
     let frame = 0;
     let running = true;
@@ -30,7 +30,7 @@ export function Starfield() {
         canvas.height = height;
       }
       context.clearRect(0, 0, width, height);
-      context.fillStyle = "#050508";
+      context.fillStyle = "#12131a";
       context.fillRect(0, 0, width, height);
       for (const star of stars) {
         const twinkle = reduced ? star.a : star.a * (0.65 + 0.35 * Math.sin(frame * 0.01 * star.s + star.x * 20));

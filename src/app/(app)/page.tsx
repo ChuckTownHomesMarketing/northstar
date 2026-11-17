@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BoundForm } from "@/components/forms";
-import { Field, PageHeader, marketLabel } from "@/components/ui";
-import { dateToIso, firstName, formatLongDate, greeting, isoToUtcDate, todayIso } from "@/lib/dates";
+import { Field, marketLabel } from "@/components/ui";
+import { dateToIso, firstName, formatLongDate, isoToUtcDate, todayIso } from "@/lib/dates";
 import { auditAppliesTo } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { saveAuditTemplate, toggleAudit } from "@/server/audit-actions";
@@ -54,11 +54,15 @@ export default async function MyDayPage() {
 
   return (
     <>
-      <PageHeader
-        eyebrow={formatLongDate(today)}
-        title={`${greeting()}, ${firstName(user.name)}`}
-        lede="Your checklist, your tasks, your content, and your orders. The shared marketing boards live under Marketing."
-      />
+      <header className="welcome">
+        <div>
+          <h1>
+            Welcome, <b>{firstName(user.name)}</b>
+          </h1>
+          <p>Your checklist, tasks, content, and orders. Shared marketing boards live under Marketing.</p>
+        </div>
+        <p className="muted">{formatLongDate(today)}</p>
+      </header>
       <div className="split">
         <section className="card">
           <h2>Daily audit</h2>

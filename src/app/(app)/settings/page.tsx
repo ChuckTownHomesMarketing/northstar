@@ -3,6 +3,7 @@ import { Field, PageHeader, marketLabel } from "@/components/ui";
 import { INTEGRATION_CATALOG } from "@/lib/integrations";
 import { prisma } from "@/lib/prisma";
 import { AccessPanel } from "./access-panel";
+import { HealthTargetsPanel } from "./health-panel";
 import { requireAdmin } from "@/server/session";
 import {
   addPerson,
@@ -247,6 +248,7 @@ export default async function SettingsPage() {
           </div>
         </section>
       ) : null}
+      <HealthTargetsPanel />
       <AccessPanel />
       <section id="integrations" className="section-gap">
         <h2>Future data connections</h2>

@@ -140,6 +140,21 @@ async function main() {
     });
   }
 
+  for (const target of [
+    { key: "leadVolume", label: "Lead volume", target: 40, secondaryTarget: null, direction: "higher", unit: "leads" },
+    { key: "costEfficiency", label: "Cost efficiency", target: 150, secondaryTarget: null, direction: "lower", unit: "dollars" },
+    { key: "contentOutput", label: "Content output", target: 8, secondaryTarget: null, direction: "higher", unit: "pieces" },
+    { key: "taskAudit", label: "Task and audit completion", target: 80, secondaryTarget: null, direction: "higher", unit: "percent" },
+    { key: "reviews", label: "Reviews and reputation", target: 4.5, secondaryTarget: 4, direction: "higher", unit: "rating" },
+    { key: "ordering", label: "Ordering fulfillment", target: 80, secondaryTarget: null, direction: "higher", unit: "percent" },
+  ]) {
+    await prisma.healthTarget.upsert({
+      where: { key: target.key },
+      update: {},
+      create: target,
+    });
+  }
+
   const users = await prisma.user.findMany();
   for (const person of users) {
     await prisma.userModuleGrant.upsert({

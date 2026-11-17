@@ -1,5 +1,5 @@
 import { signIn } from "@/auth";
-import { StarMark } from "@/components/ui";
+import { NorthstarMark } from "@/components/logo";
 import { devLoginEnabled, googleAuthConfigured } from "@/lib/access";
 import { prisma } from "@/lib/prisma";
 
@@ -27,14 +27,12 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <div className="login-wrap">
       <main className="card login">
-        <div className="brand">
-          <span className="brand-mark">
-            <StarMark size={22} />
-          </span>
-          <span>
-            <strong>Northstar</strong>
-            <p>ChuckTown Homes</p>
-          </span>
+        <div className="wordmark-bar">
+          <NorthstarMark size={48} id="login" />
+          <p className="wordmark">
+            Northstar
+            <small>ChuckTown Homes</small>
+          </p>
         </div>
         <h1>Sign in</h1>
         <p className="lede">Marketing operations for the ChuckTown Homes team. Google accounts on the allowlist only.</p>

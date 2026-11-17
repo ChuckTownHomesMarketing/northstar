@@ -465,6 +465,17 @@ model AuditCheck {
   @@index([day])
 }
 
+/// Admin-set targets for the Marketing Health chart. Scores are never invented when the underlying numbers are missing.
+model HealthTarget {
+  key              String @id
+  label            String
+  target           Float
+  secondaryTarget  Float?
+  direction        String
+  unit             String
+  updatedAt        DateTime @updatedAt
+}
+
 model ApiToken {
   id          String    @id @default(cuid())
   name        String

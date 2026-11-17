@@ -1,6 +1,7 @@
 "use client";
 
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { axisTick, gridStroke, tooltipStyle } from "@/components/chart-theme";
 
 export function KpiCharts({
   data,
@@ -18,11 +19,11 @@ export function KpiCharts({
           <div style={{ width: "100%", height: 260 }}>
             <ResponsiveContainer>
               <BarChart data={leads}>
-                <CartesianGrid stroke="#efe7d8" vertical={false} />
-                <XAxis dataKey="market" tick={{ fontSize: 12 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="leads" fill="#0f6e6b" radius={[6, 6, 0, 0]} />
+                <CartesianGrid stroke={gridStroke} vertical={false} />
+                <XAxis dataKey="market" tick={axisTick} />
+                <YAxis allowDecimals={false} tick={axisTick} />
+                <Tooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="leads" fill="#a78bfa" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -34,11 +35,11 @@ export function KpiCharts({
           <div style={{ width: "100%", height: 260 }}>
             <ResponsiveContainer>
               <BarChart data={cpls}>
-                <CartesianGrid stroke="#efe7d8" vertical={false} />
-                <XAxis dataKey="market" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip formatter={(value) => [`$${Number(value).toFixed(2)}`, "CPL"]} />
-                <Bar dataKey="cpl" fill="#b6893a" radius={[6, 6, 0, 0]} />
+                <CartesianGrid stroke={gridStroke} vertical={false} />
+                <XAxis dataKey="market" tick={axisTick} />
+                <YAxis tick={axisTick} />
+                <Tooltip contentStyle={tooltipStyle} formatter={(value) => [`$${Number(value).toFixed(2)}`, "CPL"]} />
+                <Bar dataKey="cpl" fill="#f3c2a4" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

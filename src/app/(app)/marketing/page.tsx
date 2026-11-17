@@ -4,12 +4,14 @@ import { addDays, currentWeekStart, firstName, formatLongDate, formatMonth, gree
 import { effectiveCpl, sumNullable } from "@/lib/metrics";
 import { formatCount, formatMoneyFromCents } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import { HealthPanel } from "./health-panel";
 import { requireModule } from "@/server/access";
 import { ensureRecurringTasks } from "@/server/task-actions";
 
 export const metadata = { title: "Home" };
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ market?: string }> }) {
+  const params = await searchParams;
   const user = await requireModule("marketing");
   const ownWork = user.role === "VA" ? { ownerId: user.id } : {};
   const now = new Date();
@@ -52,6 +54,7 @@ export default async function HomePage() {
         title="Marketing"
         lede={`${greeting(now)}, ${firstName(user.name)}. The week at a glance across ChuckTown's markets. Empty boxes mean nobody has entered a number yet.`}
       />
+      <HealthPanel market={params.market} />
       {openings.length > 0 ? (
         <div className="callout" style={{ marginBottom: 16 }}>
           {openings.map((market) => (

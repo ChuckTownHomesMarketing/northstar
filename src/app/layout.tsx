@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Fraunces, Outfit } from "next/font/google";
+import { Outfit } from "next/font/google";
+import { Starfield } from "@/components/starfield";
 import "./globals.css";
 
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-sans" });
-const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-serif" });
 
 export const metadata: Metadata = {
   title: { default: "Northstar", template: "%s · Northstar" },
@@ -15,8 +15,11 @@ export const dynamic = "force-dynamic";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${outfit.variable} ${fraunces.variable}`}>
-      <body>{children}</body>
+    <html lang="en" className={outfit.variable}>
+      <body>
+        <Starfield />
+        {children}
+      </body>
     </html>
   );
 }

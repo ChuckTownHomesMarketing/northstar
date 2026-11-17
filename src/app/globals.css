@@ -174,6 +174,13 @@ button { cursor: pointer; }
   color: #c8c4d8;
 }
 .avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 13px;
+  letter-spacing: 0;
+  flex: none;
   border-radius: 999px;
   background: linear-gradient(180deg, #c4b5fd, #6d5bd0);
   color: #140c22;
@@ -286,7 +293,14 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .bar-track span { display: block; height: 100%; border-radius: inherit; }
 .profile-card { display: grid; gap: 14px; }
 .profile-top { display: flex; gap: 10px; align-items: center; }
-.profile-top .avatar-btn { width: 46px; height: 46px; }
+.profile-top .avatar-btn { width: 48px; height: 48px; font-size: 15px; }
+.donut-block { display: grid; justify-items: center; gap: 12px; }
+.donut-chart { width: 200px; height: 200px; }
+.donut-legend { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; gap: 6px; }
+.donut-legend li { display: grid; grid-template-columns: 10px minmax(0, 1fr) auto; gap: 8px; align-items: center; font-size: 13px; }
+.donut-dot { width: 8px; height: 8px; border-radius: 999px; }
+.donut-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.donut-value { font-variant-numeric: tabular-nums; font-weight: 700; }
 .chip-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .chip { background: #23242d; border-radius: 12px; padding: 8px; }
 .chip span { display: block; color: var(--ink-soft); font-size: 11px; }
